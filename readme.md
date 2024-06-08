@@ -32,7 +32,7 @@ To add training data to the model:
         var result = solver.GetCharacterImages();
         if (result.Success == true)
         {
-            foreach (var image in iresult.GetResult())
+            foreach (var image in result.GetResult())
             {
                 File.WriteAllBytes(<Path>, image.ToByteArray());
             }
