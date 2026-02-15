@@ -123,7 +123,7 @@ namespace AmazonCaptchaSolver
                 foreach (var characterColumn in characterColumns)
                 {
                     var copy = (MagickImage)this.Image.Clone();
-                    copy.Crop(new MagickGeometry(characterColumn.Item1, 0, characterColumn.Item2 - characterColumn.Item1, copy.Height)); // Crop down to the character column
+                    copy.Crop(new MagickGeometry(characterColumn.Item1, 0, (uint)(characterColumn.Item2 - characterColumn.Item1), copy.Height)); // Crop down to the character column
                     characterImages.Add(copy);
                 }
 
@@ -179,7 +179,7 @@ namespace AmazonCaptchaSolver
                 if (image1.Format != MagickFormat.Png)
                     return MethodResult.CreateFailureSingle<MagickImage>("The images must be in png format.");
 
-                var createImageResult = Solver.CreateImage(MagickColors.White, image1.Width + image2.Width, image1.Height, false);
+                var createImageResult = Solver.CreateImage(MagickColors.White, (int)(image1.Width + image2.Width), (int)image1.Height, false);
                 if (createImageResult.Success == false)
                     return MethodResult.CreateFailureSingle<MagickImage>(createImageResult.Message);
 
@@ -187,8 +187,8 @@ namespace AmazonCaptchaSolver
                 if (image == null)
                     return MethodResult.CreateFailureSingle<MagickImage>("Unable to create the merged image.");
 
-                image.Composite(image1, 0, 0);
-                image.Composite(image2, image1.Width, 0);
+                image.Composite(image1, 0, 0, CompositeOperator.Over);
+                image.Composite(image2, (int)image1.Width, 0, CompositeOperator.Over);
 
                 return MethodResult.CreateSuccessSingle(image);
             }
@@ -209,7 +209,7 @@ namespace AmazonCaptchaSolver
             try
             {
                 var pixels = image.GetPixels();
-                var imageColumns = Enumerable.Range(0, image.Width).Select(x => Enumerable.Range(0, image.Height).Select(y => pixels.GetPixel(x, y).ToColor().R).ToList()).ToList();
+                var imageColumns = Enumerable.Range(0, (int)image.Width).Select(x => Enumerable.Range(0, (int)image.Height).Select(y => pixels.GetPixel(x, y).ToColor().R).ToList()).ToList();
                 var imageCode = imageColumns.Select(column => column.Any(pixel => pixel == 0) ? 1 : 0).ToList();
                 var xPoints = imageCode.Select((s, d) => new { s, d }).Where(item => item.s == 1).Select(item => item.d).ToList();
                 var xCoords = xPoints.Where(x => !xPoints.Contains(x - 1) || !xPoints.Contains(x + 1)).ToList();
@@ -220,7 +220,7 @@ namespace AmazonCaptchaSolver
                 for (var i = 0; i < xCoords.Count; i += 2)
                 {
                     var start = xCoords[i];
-                    var end = Math.Min(xCoords[i + 1] + 1, image.Width - 1);
+                    var end = Math.Min(xCoords[i + 1] + 1, (int)image.Width - 1);
                     if (end - start <= MAXIMUM_CHARACTER_WIDTH)
                     {
                         characterBoxes.Add((start, end));
@@ -320,7 +320,7 @@ namespace AmazonCaptchaSolver
         /// <returns></returns>
         public static MethodResultSingle<MagickImage> CreateImage(IMagickColor<ushort> color, int width, int height, bool applyThreshold = true)
         {
-            var image = new MagickImage(color, width, height);
+            var image = new MagickImage(color, (uint)width, (uint)height);
             image.ColorSpace = ColorSpace.Gray;
             image.Format = MagickFormat.Png;
             if (applyThreshold)

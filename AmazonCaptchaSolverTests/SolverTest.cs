@@ -25,15 +25,6 @@ namespace AmazonCaptchaSolverTests
                         else
                             Console.WriteLine($"Failed to solve captcha: {result.Message}");
 
-                        var iresult = solver.GetCharacterImages();
-                        if (iresult.Success == true)
-                        {
-                            foreach (var image in iresult.GetResult())
-                            {
-                                File.WriteAllBytes(< Path >, image.ToByteArray());
-                            }
-                        }
-
                         Assert.That(result.Success == true, Is.True, $"Solver indicated failure: {result.Message}");
                         Assert.That(result.GetResult(), Is.EqualTo(fileName), "Solver failed to solve captcha correctly.");
                     }
